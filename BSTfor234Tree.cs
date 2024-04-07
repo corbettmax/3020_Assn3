@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Part3
 {
@@ -55,12 +56,12 @@ namespace Part3
                 }
                 else
                 {
-                    if (root.key.Count() != 3) //make sure the root is not full
+                    if (p.n != 3) //make sure the root is not full
                     {
                         if (!p.leaf)
                         {
                             index = 0;
-                            for (int i = 0; i < p.key.Count(); i++) //find where k would be in the tree
+                            for (int i = 0; i < p.n; i++) //find where k would be in the tree
                             {
                                 if (k.CompareTo(p.key[i]) == 1)
                                 {
@@ -72,22 +73,26 @@ namespace Part3
                                 }
                             }
 
-                            if (p.c[index].key.Count() == 3) //if proper child is full don't descend
+                            if (p.c[index].n == 3) //if proper child is full don't descend
                             {
                                 Split(p, index);
                             }
-                            p = p.c[index];
+                            else
+                            {
+                                p = p.c[index];
+                            }
 
                         }
 
                         else
                         {
 
-                            p.key[p.key.Count()] = k; //insert k into leaf node's array
+                            p.key[p.n] = k; //insert k into leaf node's array
+                            p.n++;
 
-                            for (int i = 0; i < p.key.Count(); i++) //sort the keys of the leaf node
+                            for (int i = 0; i < p.n; i++) //sort the keys of the leaf node
                             {
-                                for (int j = 0; j< (p.key.Count()-1); j++)
+                                for (int j = 0; j< (p.n - 1); j++)
                                 {
                                     if (p.key[j].CompareTo(p.key[j+1]) == 1)
                                     {
@@ -117,7 +122,7 @@ namespace Part3
         }
         public bool Delete(T k) //which returns true if key k is successfully deleted; false otherwise. (10 marks)
         {
-
+            return false;
         }
 
         //O(log n)
@@ -140,7 +145,7 @@ namespace Part3
                     else
                     {
                         curr = p.c[0];
-                        for(int i=0; i<p.key.Count(); i++) //find where k would be in the tree
+                        for(int i=0; i<p.n; i++) //find where k would be in the tree
                         {
                             if (k.CompareTo(p.key[i]) == 1) 
                             {
@@ -161,11 +166,37 @@ namespace Part3
         }
         public BSTforRBTree<T> Convert() //which builds and returns the equivalent red-black tree.For this assignment, the red-black tree is represented as an instance of the class BSTforRBTree. The code for (8 marks)
         {
+            return new BSTforRBTree<T>();
 
         }
         public void Print() //which prints out the keys of the 2-3-4 tree in order. (4 marks)
         {
+            PrintNode(root, 0, 0); // call private, recursive Print
+            Console.WriteLine();
 
+        }
+
+        private void PrintNode(Node<T> node, int k, int indent) //private recursive print method
+        {
+            string s;
+            string t = new string(' ', indent);
+
+            if (node != null)
+            {
+                for (int i = (node.n ); i > ((node.n+1)/ 2); i--)
+                    PrintNode(node.c[i], i, indent + 8);
+
+                Console.Write(t + "[");
+                for (int j = 0; j < (node.key.Length); j++)
+                {
+                    Console.Write(node.key[j].ToString() + ",");
+                }
+                Console.Write("] on branch " + k + '\n');
+
+
+                for (int i = ((node.n+1) / 2); i >= 0; i--)
+                    PrintNode(node.c[i], i, indent + 8);
+            }
         }
 
         private void Split(Node<T> x, int i) //support method that splits the ith full child of x into 2 nodes
@@ -174,10 +205,13 @@ namespace Part3
             {
                 Node<T> newRoot = new Node<T>();
                 newRoot.key[0] = root.key[1];
+                newRoot.n++;
                 Node<T> newRootChildA = new Node<T>();
                 newRootChildA.key[0] = root.key[0];
+                newRootChildA.n++;
                 Node<T> newRootChildB = new Node<T>();
                 newRootChildB.key[0] = root.key[2];
+                newRootChildB.n++;
 
 
                 newRoot.leaf = false;
@@ -193,7 +227,9 @@ namespace Part3
                 }
                 else
                 {
-                    for(int j = 0; j<2; j++)
+                    newRootChildA.leaf = false;
+                    newRootChildB.leaf = false;
+                    for (int j = 0; j<2; j++)
                     {
                         newRootChildA.c[j] = root.c[j];
                         newRootChildB.c[j] = root.c[3-j];
@@ -207,8 +243,10 @@ namespace Part3
             {
                 Node<T> newRootChildA = new Node<T>();
                 newRootChildA.key[0] = x.c[i].key[0];
+                newRootChildA.n++;
                 Node<T> newRootChildB = new Node<T>();
                 newRootChildB.key[0] = x.c[i].key[2];
+                newRootChildB.n++;
 
                 if (x.c[i].leaf) //set the two new nodes to leafs if the node being split is a leaf
                 {
@@ -217,6 +255,8 @@ namespace Part3
                 }
                 else
                 {
+                    newRootChildA.leaf = false;
+                    newRootChildB.leaf = false;
                     for (int j = 0; j < 2; j++) //reattach children of the target node to the newly split nodes
                     {
                         newRootChildA.c[j] = x.c[i].c[j];
@@ -224,7 +264,7 @@ namespace Part3
                     }
                 }
 
-                if (x.key.Count() == 3)
+                if (x.n == 3)
                 {
                     throw new Exception("Split called on a node whose parent is full !");
                 }
@@ -232,6 +272,7 @@ namespace Part3
                 T temp = x.key[1];
                 x.key[2] = temp;
                 x.key[1] = x.c[i].key[1];
+                x.n++;
 
                 x.c[i] = newRootChildA;
                 x.c[i + 1] = newRootChildB;
@@ -250,20 +291,51 @@ namespace Part3
 
     //-----------------------------------------------------------------------------
 
-    public class Program2
+    public class Program
     {
         static void Main(string[] args)
         {
-            Random randomValue = new Random();       // Random number
-            Color c;
+             TwoThreeFourTree<int> tree = new TwoThreeFourTree<int>();
 
-            BSTforRBTree<int> B = new BSTforRBTree<int>();
-            for (int i = 0; i < 20; i++)
-            {
-                c = i % 2 == 0 ? Color.RED : Color.BLACK;
-                B.Add(randomValue.Next(90) + 10, c); // Add random integers with alternating colours
-            }
-            B.Print();                               // In order
+
+            tree.Insert(6);
+
+            Console.WriteLine("\n\n\n Print #1");
+            tree.Print();
+
+
+            tree.Insert(7);
+            Console.WriteLine("\n\n\n Print #2");
+            tree.Print();
+            tree.Insert(2);
+            Console.WriteLine("\n\n\n Print #3");
+            tree.Print();
+            tree.Insert(4);
+            Console.WriteLine("\n\n\n Print #4");
+            tree.Print();
+            tree.Insert(8);
+            Console.WriteLine("\n\n\n Print #5");
+            tree.Print();
+            tree.Insert(10);
+            Console.WriteLine("\n\n\n Print #6");
+            tree.Print();
+            tree.Insert(17);
+            Console.WriteLine("\n\n\n Print #7");
+            tree.Print();
+            tree.Insert(20);
+            Console.WriteLine("\n\n\n Print #8");
+            tree.Print();
+            tree.Insert(1);
+            Console.WriteLine("\n\n\n Print #9");
+            tree.Print();
+            tree.Insert(9);
+            Console.WriteLine("\n\n\n Print #10");
+            tree.Print();
+            tree.Insert(12);
+
+            Console.WriteLine("\n\n\n Print #11");
+            tree.Print();
+
 
             Console.ReadLine();
         }
