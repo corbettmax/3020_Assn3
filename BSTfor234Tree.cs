@@ -232,7 +232,7 @@ namespace Part3
                     for (int j = 0; j<2; j++)
                     {
                         newRootChildA.c[j] = root.c[j];
-                        newRootChildB.c[j] = root.c[3-j];
+                        newRootChildB.c[j] = root.c[j+2];
                     }
                 }
                 root = newRoot;
@@ -269,10 +269,30 @@ namespace Part3
                     throw new Exception("Split called on a node whose parent is full !");
                 }
 
-                T temp = x.key[1];
-                x.key[2] = temp;
-                x.key[1] = x.c[i].key[1];
-                x.n++;
+                if(i >= 2)
+                {
+                    x.key[2] = x.c[i].key[1];
+                    x.n++;
+
+                }
+                else if (i == 1)
+                {
+                    T temp = x.key[1];
+                    x.key[2] = temp;
+                    x.key[1] = x.c[i].key[1];
+                    x.n++;
+                }
+                else
+                {
+                    T temp = x.key[1];
+                    x.key[2] = temp;
+                    x.key[1] = x.key[0];
+                    x.key[0] = x.c[i].key[1];
+                    x.n++;
+
+                }
+
+                
 
                 x.c[i] = newRootChildA;
                 x.c[i + 1] = newRootChildB;
