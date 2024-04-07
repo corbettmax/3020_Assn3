@@ -1,94 +1,64 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace part2
 {
-    public class BinomialNode<T>
+    public class LazyBinomialHeap<T> where T : IComparable<T>
     {
-        public T Item { get; set; }
-        public int Degree { get; set; }
-        public BinomialNode<T> LeftMostChild { get; set; }
-        public BinomialNode<T> RightSibling { get; set; }
+        private List<BinomialNode<T>>[] lazyHeap; // Array of lists of binomial lazyHeap
+        private BinomialNode<T> highestPrio; // Reference to the item with highest priority
+        private int size; // Size of the heap
+
+        public class BinomialNode<T>
+        {
+            public T Item { get; set; }
+            public int Degree { get; set; }
+            public BinomialNode<T> LeftMostChild { get; set; }
+            public BinomialNode<T> RightSibling { get; set; }
+
+            public BinomialNode(T item)
+            {
+                Item = item;
+                Degree = 0;
+                LeftMostChild = null;
+                RightSibling = null;
+            }
+        }
 
         // Constructor
-
-        public BinomialNode(T item)
+        public LazyBinomialHeap()
         {
-            Item = item;
-            Degree = 0;
-            LeftMostChild = null;
-            RightSibling = null;
-        }
-    }
-
-    //--------------------------------------------------------------------------------------
-
-    // Common interface for all non-linear data structures
-
-    public interface IContainer<T>
-    {
-        void MakeEmpty();  // Reset an instance to empty
-        bool Empty();      // Test if an instance is empty
-        int Size();        // Return the number of items in an instance
-    }
-
-    //--------------------------------------------------------------------------------------
-
-    public interface ILazyHeap<T> : IContainer<T> where T : IComparable
-    {
-        void Add(T item);               // Add an item to a binomial heap
-        void Remove();                  // Remove the item with the highest priority
-        T Front();                      // Return the item with the highest priority
-        void Merge(LazyHeap<T> H);  // Merge H with the current binomial heap
-    }
-
-    //--------------------------------------------------------------------------------------
-
-    // Binomial Heap
-    // Implementation:  Leftmost-child, right-sibling
-
-    public class LazyHeap<T> where T : IComparable
-    {
-        private BinomialNode<T> head;  // Head of the root list
-        private BinomialNode<T> highestPriorityNode;
-        private int size;              // Size of the binomial heap
-
-        // Contructor
-        // Time complexity:  O(1)
-        public LazyHeap()
-        {
-            head = new BinomialNode<T>(default(T));   // Header node
+            // Creating a new lazyHeap that supports up to 2^16 elements (we weren't sure what degree to support up to so we just chose 16).
+            lazyHeap = new List<BinomialNode<T>>[17];
+            highestPrio = null;
             size = 0;
         }
 
         // Add
-        // Inserts an item into the binomial heap
-        // Time complexity:  O(1)
         public void Add(T item)
         {
-            BinomialNode<T> H = new BinomialNode<T>(item);
-            if (highestPriorityNode == null || item.CompareTo(highestPriorityNode.Item) > 0)
+            BinomialNode<T> newNode = new BinomialNode<T>(item);
+            if (highestPrio == null || item.CompareTo(highestPrio.Item) > 0)
             {
-                highestPriorityNode = H;
+                highestPrio = newNode;
             }
 
-            H.RightSibling = head.RightSibling;
-            head.RightSibling = H;
+            if (lazyHeap[0] == null)
+            {
+                lazyHeap[0] = new List<BinomialNode<T>>();
+            }
+
+            lazyHeap[0].Add(newNode);
 
             size++;
         }
 
         // Front
-        // Returns the item with the highest priority
-        // Time complexity:  O(1)
         public T Front()
         {
-            if (highestPriorityNode != null)
+            if (highestPrio != null)
             {
-                return highestPriorityNode.Item;
+                return highestPrio.Item;
             }
             else
             {
@@ -97,40 +67,35 @@ namespace part2
             }
         }
 
-
-        // Remove
-        // Removes the item with the highest priority from the binomial heap
-        // Time complexity:  O(log n)
+        //Remove
         public void Remove()
         {
             if (!Empty())
             {
-                BinomialNode<T> prev = head;
-                BinomialNode<T> curr = head.RightSibling;
+                BinomialNode<T> prev = null;
+                BinomialNode<T> curr = highestPrio;
 
-                while (curr != null && curr != highestPriorityNode)
+                for (int i = 0; i < lazyHeap.Length; i++)
                 {
-                    prev = curr;
-                    curr = curr.RightSibling;
+                    if (lazyHeap[i] != null)
+                    {
+                        foreach (var node in lazyHeap[i])
+                        {
+                            if (node.RightSibling == curr)
+                            {
+                                prev = node;
+                                break;
+                            }
+                        }
+                    }
                 }
 
-                if (curr == highestPriorityNode)
+                if (prev != null && curr != null)
                 {
                     prev.RightSibling = curr.RightSibling;
-                    highestPriorityNode = null;
-
-                    BinomialNode<T> temp = head.RightSibling;
-                    while (temp != null)
-                    {
-                        if (highestPriorityNode == null || temp.Item.CompareTo(highestPriorityNode.Item) > 0)
-                        {
-                            highestPriorityNode = temp;
-                        }
-                        temp = temp.RightSibling;
-                    }
-
                     size--;
 
+                    // Coalesce to maintain heap properties
                     Coalesce();
                 }
             }
@@ -141,117 +106,92 @@ namespace part2
         }
 
         // Print
-        // Prints the items in the binomial heap
         public void Print()
         {
-            BinomialNode<T> curr = head.RightSibling;
-
-            while (curr != null)
+            for (int i = 0; i < lazyHeap.Length; i++)
             {
-                Console.WriteLine(curr.Item);
-                curr = curr.RightSibling;
+                Console.WriteLine("Binomial lazyHeap of degree " + i + ":");
+                if (lazyHeap[i] != null && lazyHeap[i].Count > 0)
+                {
+                    foreach (var tree in lazyHeap[i])
+                    {
+                        BinomialNode<T> current = tree;
+                        while (current != null)
+                        {
+                            Console.WriteLine(current.Item);
+
+                            BinomialNode<T> child = current.LeftMostChild;
+                            while (child != null)
+                            {
+                                Console.WriteLine(child.Item);
+                                child = child.RightSibling;
+                            }
+
+                            current = current.RightSibling;
+                        }
+                    }
+                }
             }
         }
 
+
+        // Coalesce
         private void Coalesce()
         {
-            List<BinomialNode<T>> binomialTrees = new List<BinomialNode<T>>();
+            List<BinomialNode<T>> newlazyHeap = new List<BinomialNode<T>>();
 
-            BinomialNode<T> prev = head;
-            BinomialNode<T> curr = head.RightSibling;
-            while (curr != null)
+            // Merge lazyHeap with the same degree until no two lazyHeap have the same degree
+            foreach (var lazyHeap in lazyHeap)
             {
-                int degree = curr.Degree;
-
-                while (binomialTrees.Count <= degree)
+                if (lazyHeap != null)
                 {
-                    binomialTrees.Add(null);
-                }
-
-                while (binomialTrees[degree] != null)
-                {
-                    BinomialNode<T> other = binomialTrees[degree];
-
-                    if (curr.Item.CompareTo(other.Item) > 0)
+                    foreach (var tree in lazyHeap)
                     {
-                        BinomialNode<T> temp = curr;
-                        curr = other;
-                        other = temp;
+                        BinomialNode<T> currentTree = tree; // Assign tree to a temporary variable
+
+                        int degree = currentTree.Degree;
+
+                        while (newlazyHeap.Count <= degree)
+                        {
+                            newlazyHeap.Add(null);
+                        }
+
+                        while (newlazyHeap[degree] != null)
+                        {
+                            BinomialNode<T> other = newlazyHeap[degree];
+
+                            if (currentTree.Item.CompareTo(other.Item) > 0)
+                            {
+                                // Swap the references
+                                BinomialNode<T> temp = currentTree;
+                                currentTree = other;
+                                other = temp;
+                            }
+
+                            other.RightSibling = currentTree.LeftMostChild;
+                            currentTree.LeftMostChild = other;
+                            currentTree.Degree++;
+
+                            newlazyHeap[degree] = null;
+
+                            degree++;
+                        }
+
+                        newlazyHeap[degree] = currentTree;
                     }
-
-                    other.RightSibling = curr.LeftMostChild;
-                    curr.LeftMostChild = other;
-                    curr.Degree++;
-
-                    prev.RightSibling = other.RightSibling;
-                    other.RightSibling = null;
-
-                    if (prev.RightSibling == null)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        prev = prev.RightSibling;
-                    }
-                }
-
-                binomialTrees[degree] = curr;
-                curr = curr.RightSibling;
-            }
-
-            head.RightSibling = null;
-            foreach (BinomialNode<T> tree in binomialTrees)
-            {
-                if (tree != null)
-                {
-                    tree.RightSibling = head.RightSibling;
-                    head.RightSibling = tree;
                 }
             }
-        }
-
-        // Degrees
-        // Prints the degree for each binomial tree in the root list
-        // Time complexity:  O(log n)
-        public void Degrees()
-        {
-            BinomialNode<T> p = head.RightSibling;
-
-            while (p != null)
-            {
-                Console.WriteLine(p.Degree);
-                p = p.RightSibling;
-            }
-        }
-
-        // MakeEmpty
-        // Creates an empty binomial heap
-        // Time complexity:  O(1)
-        public void MakeEmpty()
-        {
-            head.RightSibling = null;
-            size = 0;
         }
 
         // Empty
-        // Returns true is the binomial heap is empty; false otherwise
-        // Time complexity:  O(1)
         public bool Empty()
         {
             return size == 0;
         }
-
-        // Size
-        // Returns the number of items in the binomial heap
-        // Time complexity:  O(1)
-        public int Size()
-        {
-            return size;
-        }
     }
 
-    public class PriorityClass : IComparable
+    
+    public class PriorityClass : IComparable<PriorityClass>
     {
         private int priorityValue;
         private char letter;
@@ -262,9 +202,8 @@ namespace part2
             priorityValue = priority;
         }
 
-        public int CompareTo(Object obj)
+        public int CompareTo(PriorityClass other)
         {
-            PriorityClass other = (PriorityClass)obj;
             return priorityValue - other.priorityValue;
         }
 
@@ -281,17 +220,18 @@ namespace part2
             int i;
             Random r = new Random();
 
-            LazyHeap<PriorityClass> BH = new LazyHeap<PriorityClass>();
+            LazyBinomialHeap<PriorityClass> BH = new LazyBinomialHeap<PriorityClass>();
 
             for (i = 0; i < 20; i++)
             {
                 BH.Add(new PriorityClass(r.Next(50), (char)r.Next('a', 'z' + 1)));
             }
+            BH.Print();
+            Console.WriteLine("The highest priority item is: " + BH.Front());
 
-            Console.WriteLine("Size of heap: " + BH.Size());
+            BH.Remove();
             BH.Print();
             Console.ReadLine();
         }
     }
 }
-
