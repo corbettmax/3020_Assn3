@@ -164,38 +164,65 @@ namespace Part3
             return false;
 
         }
-        public BSTforRBTree<T> Convert() //which builds and returns the equivalent red-black tree.For this assignment, the red-black tree is represented as an instance of the class BSTforRBTree. The code for (8 marks)
+        public BSTforRBTree<T> Convert() //which builds and returns the equivalent red-black tree (8 marks)
         {
-            return new BSTforRBTree<T>();
+            BSTforRBTree<T> redBlack = new BSTforRBTree<T>();
+            Convert(ref redBlack, root);
+            return redBlack;
 
         }
+
+        private void Convert(ref BSTforRBTree<T> tree, Node<T> node) //private method that recursively converts each node 
+        {
+            if(node != null)
+            {
+                if(node.n == 1)
+                {
+                    tree.Add(node.key[0], Color.BLACK);
+                }
+                else if (node.n == 2)
+                {
+                    tree.Add(node.key[0], Color.BLACK); //insert black first
+                    tree.Add(node.key[1], Color.RED);
+
+                }
+                else
+                {
+                    tree.Add(node.key[1], Color.BLACK); //insert black first
+                    tree.Add(node.key[0], Color.RED);
+                    tree.Add(node.key[2], Color.RED);
+                }
+
+                for(int i = 0; i<4; i++)
+                {
+                    Convert(ref tree, node.c[i]);
+                }
+            }
+
+        }
+
+
+
         public void Print() //which prints out the keys of the 2-3-4 tree in order. (4 marks)
         {
-            PrintNode(root, 0, 0); // call private, recursive Print
+            PrintNode(root, 0); // call private, recursive Print
             Console.WriteLine();
 
         }
 
-        private void PrintNode(Node<T> node, int k, int indent) //private recursive print method
+        private void PrintNode(Node<T> node, int indent) //private recursive print method
         {
             string s;
             string t = new string(' ', indent);
 
             if (node != null)
-            {
-                for (int i = (node.n ); i > ((node.n+1)/ 2); i--)
-                    PrintNode(node.c[i], i, indent + 8);
-
-                Console.Write(t + "[");
-                for (int j = 0; j < (node.key.Length); j++)
+            { 
+                for (int j = 0; j < (node.n); j++)
                 {
-                    Console.Write(node.key[j].ToString() + ",");
+                    PrintNode(node.c[j+1], indent + 8);
+                    Console.WriteLine(t+ node.key[j].ToString() + ",");
+                    PrintNode(node.c[j], indent + 8);
                 }
-                Console.Write("] on branch " + k + '\n');
-
-
-                for (int i = ((node.n+1) / 2); i >= 0; i--)
-                    PrintNode(node.c[i], i, indent + 8);
             }
         }
 
@@ -320,41 +347,45 @@ namespace Part3
 
             tree.Insert(6);
 
-            Console.WriteLine("\n\n\n Print #1");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #1");
+            //tree.Print();
 
 
             tree.Insert(7);
-            Console.WriteLine("\n\n\n Print #2");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #2");
+            //tree.Print();
             tree.Insert(2);
-            Console.WriteLine("\n\n\n Print #3");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #3");
+            //tree.Print();
             tree.Insert(4);
-            Console.WriteLine("\n\n\n Print #4");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #4");
+            //tree.Print();
             tree.Insert(8);
-            Console.WriteLine("\n\n\n Print #5");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #5");
+            //tree.Print();
             tree.Insert(10);
-            Console.WriteLine("\n\n\n Print #6");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #6");
+            //tree.Print();
             tree.Insert(17);
-            Console.WriteLine("\n\n\n Print #7");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #7");
+            //tree.Print();
             tree.Insert(20);
-            Console.WriteLine("\n\n\n Print #8");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #8");
+            //tree.Print();
             tree.Insert(1);
-            Console.WriteLine("\n\n\n Print #9");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #9");
+            //tree.Print();
             tree.Insert(9);
-            Console.WriteLine("\n\n\n Print #10");
-            tree.Print();
+            //Console.WriteLine("\n\n\n Print #10");
+            //tree.Print();
             tree.Insert(12);
 
-            Console.WriteLine("\n\n\n Print #11");
+            Console.WriteLine("\n\n\n Print #1");
             tree.Print();
+
+            BSTforRBTree<int> rbTree = tree.Convert();
+            Console.WriteLine("\n\n\n Print after conversion");
+            rbTree.Print();
 
 
             Console.ReadLine();
