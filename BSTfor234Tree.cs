@@ -373,9 +373,8 @@ namespace Part3
             {
                 for (int j = 0; j < (node.n); j++)
                 {
-                    PrintNode(node.c[j + 1], indent + 8);
+                    PrintNode(node.c[node.n -j], indent + 8);
                     Console.WriteLine(t + node.key[j].ToString() + ",");
-                    PrintNode(node.c[j], indent + 8);
                 }
                 PrintNode(node.c[0], indent + 8);
             }
