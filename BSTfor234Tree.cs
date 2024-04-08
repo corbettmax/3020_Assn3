@@ -182,16 +182,18 @@ namespace Part3
                 }
                 else
                 {
-                    curr = p.c[0];
                     int currentChildIndex = 0;
-                    for (int i = 0; i < p.n+1; i++)
+                    curr = p.c[0];
+                    for (int i = 0; i < p.n + 1; i++) //find where k would be in the tree
                     {
                         if (k.CompareTo(p.key[i]) == 1)
-                            curr = p.c[i];
+                        {
+                            curr = p.c[i + 1]; //move p along while k is greater than the key being compared
+                        }
                         else
                         {
                             i = currentChildIndex;
-                            break;
+                            break; //break if it's found its spot
                         }
                     }
                     // Due to overflow, if we encounter a 2-Node we have to go through the cases.
@@ -243,7 +245,8 @@ namespace Part3
                             p = curr;
                         }
 
-                    } else
+                    }
+                    else
                         p = curr;
 
                 }
