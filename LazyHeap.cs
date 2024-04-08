@@ -34,7 +34,8 @@ namespace part2
             size = 0;
         }
 
-        // Add
+        // Add(T item)
+        // Creates a new binomial tree of degree 0 with the new item in it, then adds it to the List at lazyHeap[0].
         public void Add(T item)
         {
             BinomialNode<T> newNode = new BinomialNode<T>(item);
@@ -53,7 +54,8 @@ namespace part2
             size++;
         }
 
-        // Front
+        // Front()
+        // Returns the item at the front of the queue (the item with the highest priority in the heap right now).
         public T Front()
         {
             if (highestPrio != null)
@@ -67,7 +69,9 @@ namespace part2
             }
         }
 
-        // Remove
+        // Remove()
+        // Removes the highest priority item from the binomial heap, then calls coalesce to merge all trees that have the same degree and update
+        // the highestPrio so that Front() can maintain O(1).
         public void Remove()
         {
             if (!Empty())
@@ -119,7 +123,8 @@ namespace part2
             }
         }
 
-        // Print
+        // Print()
+        // Traverses every tree and prints out each node, organized by overall tree degree and further by individual node degree.
         public void Print()
         {
             for (int i = 0; i < lazyHeap.Length; i++)
@@ -152,10 +157,15 @@ namespace part2
 
 
 
-        // Coalesce
-
+        // Coalesce()
+        // Loops through each tree in each index of lazyHeap[], combining trees that exist in the same degree
+        // and moving them to the appropriate index of lazyHeap[] after they are combined. Continues until
+        // there is a maximum of one tree at each Degree index.
+        // Then, loops through each node and updates the highestPrio node accordingly so that Front can maintain O(1).
         private void Coalesce()
         {
+            BinomialNode<T> newPrio = null;
+
             for (int i = 0; i < lazyHeap.Length; i++)
             {
                 if (lazyHeap[i] != null)
@@ -196,17 +206,37 @@ namespace part2
                 }
             }
 
+            // Loops through every root node of each tree and re-assigns the value of the highest priority item
+            // to highestPrio
+            for (int i = 0; i < lazyHeap.Length; i++)
+            {
+                if (lazyHeap[i] != null)
+                {
+                    for (int j = 0; j < lazyHeap[i].Count; j++)
+                    {
+                        if (newPrio == null || lazyHeap[i][j].Item.CompareTo(newPrio.Item) > 0)
+                        {
+                            newPrio = lazyHeap[i][j];
+                        }
+ 
+                    }
+                }
+            }
+
+            highestPrio = newPrio;
         }
 
 
-        // Empty
+        // Empty()
+        // Returns whether the heap is empty or not.
         public bool Empty()
         {
             return size == 0;
         }
     }
 
-    
+    // PriorityClass
+    // Class implemented so that the characters and integers in the 'item' of each Node can be compared and sorted correctly.
     public class PriorityClass : IComparable<PriorityClass>
     {
         private int priorityValue;
@@ -229,24 +259,24 @@ namespace part2
         }
     }
 
-    public class Test
-    {
-        public static void Main(string[] args)
-        {
-            int i;
-            Random r = new Random();
+    //public class Test
+    //{
+    //    public static void Main(string[] args)
+    //    {
+    //        int i;
+    //        Random r = new Random();
 
-            LazyBinomialHeap<PriorityClass> BH = new LazyBinomialHeap<PriorityClass>();
-
-            for (i = 0; i < 19; i++)
-            {
-                BH.Add(new PriorityClass(r.Next(50), (char)r.Next('a', 'z' + 1)));
-            }
-            Console.WriteLine("The highest priority item is: " + BH.Front());
-
-            BH.Remove();
-            BH.Print();
-            Console.ReadLine();
-        }
-    }
+    //        LazyBinomialHeap<PriorityClass> BH = new LazyBinomialHeap<PriorityClass>();
+    //        //for (i = 0; i < 65; i++)
+    //        //{
+    //        //    BH.Add(new PriorityClass(r.Next(50), (char)r.Next('a', 'z' + 1)));
+    //        //}
+    //        //BH.Remove();
+    //        //Console.WriteLine("First item removed.");
+    //        //BH.Print();
+    //        //Console.WriteLine("Item at the front of the queue is " + BH.Front());
+    //        BH.Front();
+    //        Console.ReadLine();
+    //    }
+    //}
 }
