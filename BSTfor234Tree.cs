@@ -1,6 +1,8 @@
-﻿using System;
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -44,6 +46,10 @@ namespace Part3
             root.leaf = true;
         }
 
+        // Insert(T k)
+        // Purpose: Inserts the key, k, into the tree according to the 2-3-4
+        // Tree Insertion algorithm. If successfully inserted, returns true;
+        // otherwise, returns false.
         public bool Insert(T k) // which returns true if key k is successfully inserted; false otherwise. (6 marks)
         {
             Node<T> p = root;
@@ -92,13 +98,13 @@ namespace Part3
 
                             for (int i = 0; i < p.n; i++) //sort the keys of the leaf node
                             {
-                                for (int j = 0; j< (p.n - 1); j++)
+                                for (int j = 0; j < (p.n - 1); j++)
                                 {
-                                    if (p.key[j].CompareTo(p.key[j+1]) == 1)
+                                    if (p.key[j].CompareTo(p.key[j + 1]) == 1)
                                     {
                                         T temp = p.key[j];
-                                        p.key[j] = p.key[j+1];
-                                        p.key[j+1] = temp;
+                                        p.key[j] = p.key[j + 1];
+                                        p.key[j + 1] = temp;
 
                                     }
                                 }
@@ -120,6 +126,11 @@ namespace Part3
             return false;
 
         }
+
+        // Delete(T k)
+        // Purpose: Searches through the tree and deletes the key, k, according
+        // to the 2-3-4 Tree deletion algorithm. If key, k, is successfully
+        // deleted returns true; otherwise, returns false.
         public bool Delete(T k) //which returns true if key k is successfully deleted; false otherwise. (10 marks)
         {
             if (Search(k) == false)
@@ -253,8 +264,12 @@ namespace Part3
             }
             return true;
         }
+
+        // Search(T k)
+        // Purpose: Searches through the tree for key, k, and returns true if
+        // found; otherwise, returns false.
         //O(log n)
-        public bool Search(T k) //which returns true if key k is found; false otherwise(4 marks).
+        public bool Search(T k)
         {
             Node<T> p = root;
             Node<T> curr;
@@ -273,11 +288,11 @@ namespace Part3
                     else
                     {
                         curr = p.c[0];
-                        for(int i=0; i<p.n; i++) //find where k would be in the tree
+                        for (int i = 0; i < p.n; i++) //find where k would be in the tree
                         {
-                            if (k.CompareTo(p.key[i]) == 1) 
+                            if (k.CompareTo(p.key[i]) == 1)
                             {
-                                curr=p.c[i+1]; //move p along while k is greater than the key being compared
+                                curr = p.c[i + 1]; //move p along while k is greater than the key being compared
                             }
                             else
                             {
@@ -292,7 +307,10 @@ namespace Part3
             return false;
 
         }
-        public BSTforRBTree<T> Convert() //which builds and returns the equivalent red-black tree (8 marks)
+        // Convert()
+        // Purpose: Wrapper function which builds and returns the equivalent
+        // Red-Black Tree reperesentation of the 2-3-4 Tree.
+        public BSTforRBTree<T> Convert()
         {
             BSTforRBTree<T> redBlack = new BSTforRBTree<T>();
             Convert(ref redBlack, root);
@@ -300,11 +318,14 @@ namespace Part3
 
         }
 
-        private void Convert(ref BSTforRBTree<T> tree, Node<T> node) //private method that recursively converts each node 
+        // Convert(ref BSTforRBTree<T> tree, Node<T> node)
+        // Purpose: Private method that recursively converts each node into the
+        // form of a Red-Black Tree.
+        private void Convert(ref BSTforRBTree<T> tree, Node<T> node)
         {
-            if(node != null)
+            if (node != null)
             {
-                if(node.n == 1)
+                if (node.n == 1)
                 {
                     tree.Add(node.key[0], Color.BLACK);
                 }
@@ -321,7 +342,7 @@ namespace Part3
                     tree.Add(node.key[2], Color.RED);
                 }
 
-                for(int i = 0; i<4; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     Convert(ref tree, node.c[i]);
                 }
@@ -330,33 +351,40 @@ namespace Part3
         }
 
 
-
-        public void Print() //which prints out the keys of the 2-3-4 tree in order. (4 marks)
+        // Print()
+        // Purpose: Wrapper function that prints out the keys of the 2-3-4 Tree
+        // in order.
+        public void Print()
         {
             PrintNode(root, 0); // call private, recursive Print
             Console.WriteLine();
 
         }
 
+        // Print(Node<T> node, int indent)
+        // Purpose: Recursive function that prints a Node with a certain amount
+        // of indent space depending on where in the tree the node is
         private void PrintNode(Node<T> node, int indent) //private recursive print method
         {
             string s;
             string t = new string(' ', indent);
 
             if (node != null)
-            { 
+            {
                 for (int j = 0; j < (node.n); j++)
                 {
-                    PrintNode(node.c[j+1], indent + 8);
-                    Console.WriteLine(t+ node.key[j].ToString() + ",");
+                    PrintNode(node.c[j + 1], indent + 8);
+                    Console.WriteLine(t + node.key[j].ToString() + ",");
                     PrintNode(node.c[j], indent + 8);
                 }
             }
         }
 
-        private void Split(Node<T> x, int i) //support method that splits the ith full child of x into 2 nodes
+        // Split(Node<T> x, int i)
+        // Purpose: Support method that splits the ith full child of x into 2 nodes
+        private void Split(Node<T> x, int i)
         {
-            if(i == -1) // -1 is passed to i when we want to split the root
+            if (i == -1) // -1 is passed to i when we want to split the root
             {
                 Node<T> newRoot = new Node<T>();
                 newRoot.key[0] = root.key[1];
@@ -384,10 +412,10 @@ namespace Part3
                 {
                     newRootChildA.leaf = false;
                     newRootChildB.leaf = false;
-                    for (int j = 0; j<2; j++)
+                    for (int j = 0; j < 2; j++)
                     {
                         newRootChildA.c[j] = root.c[j];
-                        newRootChildB.c[j] = root.c[j+2];
+                        newRootChildB.c[j] = root.c[j + 2];
                     }
                 }
                 root = newRoot;
@@ -424,7 +452,7 @@ namespace Part3
                     throw new Exception("Split called on a node whose parent is full !");
                 }
 
-                if(i >= 2)
+                if (i >= 2)
                 {
                     x.key[2] = x.c[i].key[1];
                     x.n++;
@@ -447,21 +475,12 @@ namespace Part3
 
                 }
 
-                
-
                 x.c[i] = newRootChildA;
                 x.c[i + 1] = newRootChildB;
 
-                
-
                 return;
-
             }
-
-
         }
-
-        
     }
 
     //-----------------------------------------------------------------------------
@@ -470,7 +489,7 @@ namespace Part3
     {
         static void Main(string[] args)
         {
-             TwoThreeFourTree<int> tree = new TwoThreeFourTree<int>();
+            TwoThreeFourTree<int> tree = new TwoThreeFourTree<int>();
 
 
             tree.Insert(6);
@@ -508,7 +527,11 @@ namespace Part3
             //tree.Print();
             tree.Insert(12);
 
-            Console.WriteLine("\n\n\n Print #1");
+            Console.WriteLine("\n\n\n Print #1:");
+            tree.Print();
+
+            Console.WriteLine("\n\n\n Post Delete:");
+            tree.Delete(6);
             tree.Print();
 
             BSTforRBTree<int> rbTree = tree.Convert();
