@@ -5,7 +5,7 @@ namespace part2
 {
     public class LazyBinomialHeap<T> where T : IComparable<T>
     {
-        private List<BinomialNode<T>>[] lazyHeap; // Array of lists of binomial lazyHeap
+        private List<BinomialNode<T>>[] lazyHeap; // Array of lists of binomial trees
         private BinomialNode<T> highestPrio; // Reference to the item with highest priority
         private int size; // Size of the heap
 
@@ -67,7 +67,7 @@ namespace part2
             }
         }
 
-        //Remove
+        // Remove
         public void Remove()
         {
             if (!Empty())
@@ -75,28 +75,42 @@ namespace part2
                 BinomialNode<T> prev = null;
                 BinomialNode<T> curr = highestPrio;
 
-                for (int i = 0; i < lazyHeap.Length; i++)
+                if (highestPrio.RightSibling == null)
                 {
-                    if (lazyHeap[i] != null)
+                    for (int i = 0; i < lazyHeap[0].Count; i++)
                     {
-                        foreach (var node in lazyHeap[i])
+                        if (lazyHeap[0][i] == highestPrio)
                         {
-                            if (node.RightSibling == curr)
+                            lazyHeap[0].RemoveAt(i);
+                            size--;
+                        }
+                    }
+                    Coalesce();
+                }
+                else
+                {
+                    for (int i = 0; i < lazyHeap.Length; i++)
+                    {
+                        if (lazyHeap[i] != null)
+                        {
+                            foreach (var node in lazyHeap[i])
                             {
-                                prev = node;
-                                break;
+                                if (node.RightSibling == curr)
+                                {
+                                    prev = node;
+                                    break;
+                                }
                             }
                         }
                     }
-                }
+                    if (prev != null && curr != null)
+                    {
+                        prev.RightSibling = curr.RightSibling;
+                        size--;
 
-                if (prev != null && curr != null)
-                {
-                    prev.RightSibling = curr.RightSibling;
-                    size--;
-
-                    // Coalesce to maintain heap properties
-                    Coalesce();
+                        // Coalesce to maintain heap properties
+                        Coalesce();
+                    }
                 }
             }
             else
@@ -110,78 +124,80 @@ namespace part2
         {
             for (int i = 0; i < lazyHeap.Length; i++)
             {
-                Console.WriteLine("Binomial lazyHeap of degree " + i + ":");
                 if (lazyHeap[i] != null && lazyHeap[i].Count > 0)
                 {
+                    Console.WriteLine("BINOMIAL TREE(S) OF DEGREE " + i + ":");
                     foreach (var tree in lazyHeap[i])
                     {
-                        BinomialNode<T> current = tree;
-                        while (current != null)
+                        int degCount = 0;
+                        BinomialNode<T> leftNode = lazyHeap[i][0];
+                        BinomialNode<T> currNode = lazyHeap[i][0];
+                        while (leftNode != null)
                         {
-                            Console.WriteLine(current.Item);
-
-                            BinomialNode<T> child = current.LeftMostChild;
-                            while (child != null)
+                            Console.WriteLine("NODES OF DEGREE " + degCount);
+                            while (currNode != null)
                             {
-                                Console.WriteLine(child.Item);
-                                child = child.RightSibling;
+                                Console.WriteLine(" - " + currNode.Item);
+                                currNode = currNode.RightSibling;
                             }
-
-                            current = current.RightSibling;
+                            leftNode = leftNode.LeftMostChild;
+                            currNode = leftNode;
+                            degCount++;
+                            Console.Write("\n"); 
                         }
                     }
                 }
             }
         }
+
 
 
         // Coalesce
+
         private void Coalesce()
         {
-            List<BinomialNode<T>> newlazyHeap = new List<BinomialNode<T>>();
-
-            // Merge lazyHeap with the same degree until no two lazyHeap have the same degree
-            foreach (var lazyHeap in lazyHeap)
+            for (int i = 0; i < lazyHeap.Length; i++)
             {
-                if (lazyHeap != null)
+                if (lazyHeap[i] != null)
                 {
-                    foreach (var tree in lazyHeap)
+                    while (lazyHeap[i].Count > 1)
                     {
-                        BinomialNode<T> currentTree = tree; // Assign tree to a temporary variable
-
-                        int degree = currentTree.Degree;
-
-                        while (newlazyHeap.Count <= degree)
+                        BinomialNode<T> root1 = lazyHeap[i][0];
+                        BinomialNode<T> root2 = lazyHeap[i][1];
+                        if (root1.Item.CompareTo(root2.Item) < 0)
                         {
-                            newlazyHeap.Add(null);
-                        }
+                            BinomialNode<T> newTree = root2;
+                            root1.RightSibling = newTree.LeftMostChild;
+                            newTree.LeftMostChild = root1;
 
-                        while (newlazyHeap[degree] != null)
-                        {
-                            BinomialNode<T> other = newlazyHeap[degree];
-
-                            if (currentTree.Item.CompareTo(other.Item) > 0)
+                            newTree.Degree++;
+                            if (lazyHeap[newTree.Degree] == null)
                             {
-                                // Swap the references
-                                BinomialNode<T> temp = currentTree;
-                                currentTree = other;
-                                other = temp;
+                                lazyHeap[newTree.Degree] = new List<BinomialNode<T>>();
                             }
-
-                            other.RightSibling = currentTree.LeftMostChild;
-                            currentTree.LeftMostChild = other;
-                            currentTree.Degree++;
-
-                            newlazyHeap[degree] = null;
-
-                            degree++;
+                            lazyHeap[newTree.Degree].Add(newTree);
                         }
+                        else
+                        {
+                            BinomialNode<T> newTree = root1;
+                            root2.RightSibling = newTree.LeftMostChild;
+                            newTree.LeftMostChild = root2;
 
-                        newlazyHeap[degree] = currentTree;
+                            newTree.Degree++;
+                            if (lazyHeap[newTree.Degree] == null)
+                            {
+                                lazyHeap[newTree.Degree] = new List<BinomialNode<T>>();
+                            }
+                            lazyHeap[newTree.Degree].Add(newTree);
+                        }
+                        lazyHeap[i].RemoveAt(1);
+                        lazyHeap[i].RemoveAt(0);
                     }
                 }
             }
+
         }
+
 
         // Empty
         public bool Empty()
@@ -222,11 +238,10 @@ namespace part2
 
             LazyBinomialHeap<PriorityClass> BH = new LazyBinomialHeap<PriorityClass>();
 
-            for (i = 0; i < 20; i++)
+            for (i = 0; i < 19; i++)
             {
                 BH.Add(new PriorityClass(r.Next(50), (char)r.Next('a', 'z' + 1)));
             }
-            BH.Print();
             Console.WriteLine("The highest priority item is: " + BH.Front());
 
             BH.Remove();
