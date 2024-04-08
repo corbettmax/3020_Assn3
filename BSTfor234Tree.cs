@@ -345,12 +345,13 @@ namespace Part3
 
             if (node != null)
             { 
+
                 for (int j = 0; j < (node.n); j++)
                 {
-                    PrintNode(node.c[j+1], indent + 8);
+                    PrintNode(node.c[node.n - j], indent + 8);
                     Console.WriteLine(t+ node.key[j].ToString() + ",");
-                    PrintNode(node.c[j], indent + 8);
                 }
+                PrintNode(node.c[0], indent + 8);
             }
         }
 
@@ -511,9 +512,11 @@ namespace Part3
             Console.WriteLine("\n\n\n Print #1");
             tree.Print();
 
-            BSTforRBTree<int> rbTree = tree.Convert();
-            Console.WriteLine("\n\n\n Print after conversion");
-            rbTree.Print();
+
+
+            tree.Delete(6);
+            Console.WriteLine("\n\n\n Print after deletion");
+            tree.Print();
 
 
             Console.ReadLine();
