@@ -122,7 +122,123 @@ namespace Part3
         }
         public bool Delete(T k) //which returns true if key k is successfully deleted; false otherwise. (10 marks)
         {
-            return false;
+            if (Search(k) == false)
+            {
+                return false;
+            }
+            Node<T> p = root;
+            Node<T> curr;
+            while (p != null)
+            {
+                if (p.key.Contains(k))
+                {
+                    if (p.leaf == false) // The Node containing k is an internal node
+                    {
+                        T successor = default(T);
+                        int index = 0;
+                        for (int i = 0; i < p.key.Count(); i++) // find the index of the node we want to delete
+                            if (k.CompareTo(p.key[i]) == 0)
+                                index = i;
+
+                        Node<T> temp = p.c[index];
+                        // Find the Successor value that will be replacing the deleted value
+                        while (temp != null)
+                        {
+                            if (temp.leaf == true)
+                            {
+                                for (int i = temp.key.Count() - 1; i >= 0; i--)
+                                    if (k.CompareTo(temp.key[i]) < 0)
+                                    {
+                                        successor = temp.key[i];
+                                        break;
+                                    }
+                                break;
+                            }
+                            curr = temp.c[0];
+                            for (int i = 0; i < temp.key.Count(); i++)
+                            {
+                                if (k.CompareTo(temp.key[i]) == 1)
+                                    curr = temp.c[i + 1];
+                                else
+                                    break;
+                            }
+                            temp = curr;
+                        }
+                        p.key[index] = successor;
+
+                    } else // The Node containing k is a leaf node
+                    {
+                        int index = 0;
+                        for (int i = 0; i < p.key.Count(); i++) // find the index of the node we want to delete
+                            if (k.CompareTo(p.key[i]) == 0)
+                                index = i;
+                        p.key[index] = default(T);
+                    }
+                } else
+                {
+                    curr = p.c[0];
+                    int currentChildIndex = 0;
+                    for (int i = 0; i < p.key.Count(); i++)
+                    {
+                        if (k.CompareTo(p.key[i]) == 1)
+                            curr = p.c[i + 1];
+                        else
+                        {
+                            i = currentChildIndex;
+                            break;
+                        }
+                    }
+                    // Due to overflow, if we encounter a 2-Node we have to go through the cases.
+                    if (curr.n == 1)
+                    {
+                        // Case 1: Either of the Siblings are 3-Node / 4-Node
+                        if (p.c[currentChildIndex + 1].n > 1 || p.c[currentChildIndex + 1].n > 1)
+                        {
+                            // Rotate on adjacent sibling
+                            T parentKey = p.key[0];
+                            p.key[0] = p.c[currentChildIndex + 1].key[0];
+                            curr.key[1] = parentKey;
+                            curr.n++;
+                            curr.c[1] = p.c[currentChildIndex + 1].c[0];
+                        }
+                        // Case 2: Parent is 2-Node and the Sibling is 2-Node.
+                        else if (p.n == 1 && p.c[currentChildIndex + 1].n == 1)
+                        {
+                            // Merge the Parent Node, the Next Node, and the Sibling of the Next Node together.
+                            Node<T> newNode = new Node<T>();
+                            Node<T> sibling = p.c[currentChildIndex + 1];
+
+                            p.n = 3;
+                            // Add the Parent Node
+                            p.key[1] = p.key[0];
+                            // Add the Node we are entering
+                            p.key[0] = curr.key[0];
+                            p.c[0] = curr.c[0];
+                            p.c[1] = curr.c[1];
+                            // Add the Sibling to the right of the leaf node
+                            p.key[2] = sibling.key[0];
+                            p.c[2] = sibling.c[0];
+                            p.c[3] = sibling.c[1];
+                        }
+                        // Case 3: Siblings are 2-Node and Parent is 3-Node / 4-Node
+                        else if ((p.n == 2 || p.n == 3) 
+                            && ((p.c[currentChildIndex + 1].n == 1) && (p.c[currentChildIndex + 2].n == 1)))
+                        {
+                            // Merge the adjacent sibling nodes and the parent key
+                            p.c[currentChildIndex + 1].n = 3;
+                            // Add the parent key overlooking the siblings to the New 4-Node
+                            p.c[currentChildIndex + 1].key[1] = p.key[1];
+                            // Merge the adjacent sibling with the other adjacent sibling
+                            p.c[currentChildIndex + 1].key[2] = p.c[currentChildIndex + 2].key[0];
+                            p.c[currentChildIndex + 1].c[2] = p.c[currentChildIndex + 2].c[0];
+                            p.c[currentChildIndex + 1].c[3] = p.c[currentChildIndex + 2].c[1];
+                        }
+
+                    }
+                    p = curr;
+                }
+            }
+            return true;
         }
 
         //O(log n)
